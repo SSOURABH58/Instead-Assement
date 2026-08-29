@@ -1,0 +1,98 @@
+{
+  "taxYear": 2025,
+  "filing": {
+    "status": "MARRIED_FILING_JOINTLY",
+    "presidentialElectionCampaign": true,
+    "digitalAssets": false
+  },
+  "taxpayer": {
+    "primary": {
+      "firstName": "Jonathan",
+      "middleInitial": "A",
+      "lastName": "Alexander",
+      "identity": {
+        "ssn": "123456789",
+        "itin": null,
+        "identityPin": "789123"
+      },
+      "occupation": "Software Architect",
+      "isLegallyBlind": false,
+      "bornBefore1961": false
+    },
+    "spouse": {
+      "firstName": "Eleanor",
+      "middleInitial": "M",
+      "lastName": "Alexander",
+      "identity": {
+        "ssn": "987654321",
+        "identityPin": "456789"
+      },
+      "occupation": "Pediatrician",
+      "isLegallyBlind": false,
+      "bornBefore1961": false
+    },
+    "address": {
+      "streetLine1": "742 Evergreen Terrace",
+      "streetLine2": "Apartment 4B, Building C (Front Wing)",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62704",
+      "country": "USA"
+    },
+    "dependents": [
+      {
+        "firstName": "Lucas",
+        "lastName": "Alexander",
+        "ssn": "456127890",
+        "relationship": "Son",
+        "qualifiesForChildTaxCredit": true,
+        "qualifiesForOtherCredit": false
+      },
+      {
+        "firstName": "Maya",
+        "lastName": "Alexander",
+        "ssn": "789451230",
+        "relationship": "Daughter",
+        "qualifiesForChildTaxCredit": true,
+        "qualifiesForOtherCredit": false
+      }
+    ]
+  },
+  "income": {
+    "wagesW2": 185420.50,
+    "taxableInterest": 3420.25,
+    "ordinaryDividends": 6850.00,
+    "qualifiedDividends": 5120.00,
+    "iraDistributions": 0,
+    "pensionsAndAnnuities": 0,
+    "socialSecurityBenefits": 0,
+    "capitalGainOrLoss": -3000.00,
+    "schedules": [
+      {
+        "type": "C",
+        "businessName": "Alexander Consulting LLC",
+        "grossReceipts": 45000.00,
+        "expenses": 12500.00,
+        "netProfit": 32500.00
+      },
+      {
+        "type": "E",
+        "rentalPropertyIncome": 12000.00
+      }
+    ],
+    "totalIncome": 225190.75
+  },
+  "signing": {
+    "timestamp": "2026-04-14T15:45:00.000Z",
+    "taxpayerSignature": "Jonathan A. Alexander",
+    "spouseSignature": "Eleanor M. Alexander",
+    "preparer": {
+      "name": "David M. Vance, CPA",
+      "ptin": "P01234567",
+      "firmName": "Vance & Associates Tax Advisory Group",
+      "firmAddress": "100 Financial Way, Suite 500, Chicago, IL 60601",
+      "firmEin": "361234567",
+      "phone": "3125550199"
+    }
+  }
+}

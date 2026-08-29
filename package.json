@@ -1,0 +1,41 @@
+{
+  "name": "instead-tax-form-annotation",
+  "version": "1.0.0",
+  "description": "Enterprise-grade U.S. Tax Form Annotation Specification & TypeScript Rendering Engine",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "tax-render": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate": "tsx src/cli.ts render --form forms/form-1040/form-1040.annotation.json --data forms/form-1040/sample-data.json --out output/form-1040-filled.pdf",
+    "generate:w2": "tsx src/cli.ts render --form forms/form-w2/form-w2.annotation.json --data forms/form-w2/sample-data.json --out output/form-w2-filled.pdf",
+    "generate:all": "npm run generate && npm run generate:w2",
+    "validate": "tsx src/cli.ts validate --form forms/form-1040/form-1040.annotation.json"
+  },
+  "keywords": [
+    "tax",
+    "irs",
+    "form-1040",
+    "form-w2",
+    "pdf-lib",
+    "tax-annotation",
+    "typescript",
+    "json-schema"
+  ],
+  "author": "Instead Engineering Candidate",
+  "license": "MIT",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

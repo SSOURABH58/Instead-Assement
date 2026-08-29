@@ -1,0 +1,62 @@
+{
+  "taxYear": 2025,
+  "formType": "W-2",
+  "employee": {
+    "ssn": "123456789",
+    "name": {
+      "first": "Jonathan",
+      "middle": "A",
+      "last": "Alexander",
+      "suffix": ""
+    },
+    "address": {
+      "line1": "742 Evergreen Terrace",
+      "line2": "Apt 4B",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62704"
+    }
+  },
+  "employer": {
+    "ein": "123456789",
+    "name": "Acme Software Technologies Inc.",
+    "address": {
+      "line1": "100 Innovation Boulevard, Floor 14",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60601"
+    },
+    "stateControlNumber": "IL-99882211"
+  },
+  "financials": {
+    "box1_wagesTipsOtherComp": 185420.50,
+    "box2_federalIncomeTaxWithheld": 38240.00,
+    "box3_socialSecurityWages": 168600.00,
+    "box4_socialSecurityTaxWithheld": 10453.20,
+    "box5_medicareWagesAndTips": 185420.50,
+    "box6_medicareTaxWithheld": 2688.60,
+    "box7_socialSecurityTips": 0.00,
+    "box8_allocatedTips": 0.00,
+    "box10_dependentCareBenefits": 5000.00,
+    "box12_codes": [
+      { "code": "D", "amount": 22500.00 },
+      { "code": "W", "amount": 3850.00 }
+    ],
+    "box13_flags": {
+      "statutoryEmployee": false,
+      "retirementPlan": true,
+      "thirdPartySickPay": false
+    },
+    "box14_other": [
+      { "description": "CA_SDI", "amount": 1200.00 }
+    ],
+    "stateTaxes": [
+      {
+        "state": "IL",
+        "employerStateId": "36-991234",
+        "stateWages": 185420.50,
+        "stateIncomeTax": 9178.00
+      }
+    ]
+  }
+}

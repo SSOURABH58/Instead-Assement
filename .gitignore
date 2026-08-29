@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build and output artifacts
+dist/
+output/
+
+# Private documentation & interview notes
+docs/notes/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Logs and environment files
+*.log
+.env
+.env.local

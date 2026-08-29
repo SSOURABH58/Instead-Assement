@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://instead.com/schemas/tax-form-annotation.schema.json",
+  "title": "TaxFormAnnotationSpecification",
+  "description": "Enterprise schema for annotating fields, multi-segment shapes, data paths, and formatters on U.S. Tax Forms.",
+  "type": "object",
+  "required": ["formId", "formName", "taxYear", "revision", "pageSize", "fields"],
+  "properties": {
+    "formId": {
+      "type": "string",
+      "description": "Unique identifier of the tax form (e.g., 'IRS-1040', 'IRS-W2')."
+    },
+    "formName": {
+      "type": "string",
+      "description": "Official title of the tax form (e.g., 'U.S. Individual Income Tax Return')."
+    },
+    "taxYear": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100,
+      "description": "Applicable tax year (e.g., 2025, 2026)."
+    },
+    "revision": {
+      "type": "string",
+      "description": "IRS revision string (e.g., 'Rev. December 2025')."
+    },
+    "description": {
+      "type": "string",
+      "description": "High-level summary of the form and filing purpose."
+    },
+    "jurisdiction": {
+      "type": "string",
+      "enum": ["US_FEDERAL", "US_STATE", "US_LOCAL"],
+      "default": "US_FEDERAL"
+    },
+    "stateCode": {
+      "type": "string",
+      "description": "Two-letter state postal abbreviation if state jurisdiction (e.g., 'CA', 'NY')."
+    },
+    "pageCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of pages in the form."
+    },
+    "pageSize": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "description": "Width in points (default: 612 for 8.5in)." },
+        "height": { "type": "number", "description": "Height in points (default: 792 for 11in)." },
+        "unit": {
+          "type": "string",
+          "enum": ["pt", "in", "mm", "normalized"],
+          "default": "pt"
+        },
+        "coordinateOrigin": {
+          "type": "string",
+          "enum": ["TOP_LEFT", "BOTTOM_LEFT"],
+          "default": "TOP_LEFT",
+          "description": "Reference origin for coordinate system (PDF standard uses BOTTOM_LEFT; web/design tools use TOP_LEFT)."
+        }
+      }
+    },
+    "globalStyling": {
+      "type": "object",
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "enum": ["Helvetica", "Helvetica-Bold", "Courier", "Times-Roman"],
+          "default": "Helvetica"
+        },
+        "fontSize": { "type": "number", "default": 9 },
+        "fontColorHex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "default": "#000000" }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TaxFormField" },
+      "description": "List of annotated tax field definitions."
+    }
+  },
+  "$defs": {
+    "TaxFormField": {
+      "type": "object",
+      "required": ["id", "label", "type", "dataPath", "layoutStrategy", "bounds"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique machine-readable field identifier (e.g., 'f1040_taxpayer_ssn')."
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable label or IRS box title (e.g., 'Your social security number')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional IRS instruction notes or guidance."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "STRING",
+            "NUMBER",
+            "CURRENCY",
+            "DATE",
+            "DATETIME",
+            "BOOLEAN_CHECK",
+            "SSN",
+            "EIN",
+            "PHONE",
+            "ROUTING_NUMBER",
+            "ACCOUNT_NUMBER",
+            "CHOICE",
+            "COMPOSITE"
+          ]
+        },
+        "dataPath": {
+          "type": "string",
+          "description": "Deeply nested JSON path (e.g., 'taxpayer.primary.ssn', 'taxpayer.dependents[0].firstName', 'schedules[?(@.type==\"C\")].netProfit')."
+        },
+        "fallbackValue": {
+          "description": "Default value to render if the path evaluates to null or undefined."
+        },
+        "layoutStrategy": {
+          "type": "string",
+          "enum": [
+            "SINGLE_BOX",
+            "MULTI_LINE_WRAP",
+            "CHARACTER_SLICE",
+            "SUBFIELD_MAPPING",
+            "OVERFLOW_CHAIN"
+          ],
+          "description": "Strategy for rendering field value across one or multiple geometric shapes/boxes."
+        },
+        "format": {
+          "$ref": "#/$defs/FieldFormatConfig",
+          "description": "Detailed formatting and transformation rules."
+        },
+        "bounds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GeometryTarget" },
+          "minItems": 1,
+          "description": "One or more geometric shapes/bounding boxes associated with this field."
+        },
+        "subfields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SubfieldMapping" },
+          "description": "Subfield definitions for composite/split fields (e.g. split Date + Time, or Name + Title)."
+        },
+        "condition": {
+          "$ref": "#/$defs/RenderCondition",
+          "description": "Optional conditional visibility check."
+        }
+      }
+    },
+    "GeometryTarget": {
+      "type": "object",
+      "required": ["pageIndex", "box"],
+      "properties": {
+        "pageIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based page index (0 is page 1)."
+        },
+        "shapeType": {
+          "type": "string",
+          "enum": ["RECTANGLE", "LINE_SEGMENT", "POLYGON"],
+          "default": "RECTANGLE"
+        },
+        "box": {
+          "type": "object",
+          "required": ["x", "y", "width", "height"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "width": { "type": "number" },
+            "height": { "type": "number" }
+          }
+        },
+        "comb": {
+          "type": "object",
+          "required": ["enabled", "cellCount"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "cellCount": { "type": "integer", "minimum": 1 },
+            "cellWidth": { "type": "number" },
+            "cellSpacing": { "type": "number", "default": 0 }
+          }
+        },
+        "maxCharacters": {
+          "type": "integer",
+          "description": "Max characters permitted in this shape segment before wrapping or overflowing."
+        },
+        "characterRange": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[startIndex, endIndex] character slice for segmented comb/box layouts."
+        },
+        "subfieldKey": {
+          "type": "string",
+          "description": "Key linking this geometry target to a specific subfield in a composite field."
+        },
+        "align": {
+          "type": "string",
+          "enum": ["LEFT", "CENTER", "RIGHT"],
+          "default": "LEFT"
+        },
+        "verticalAlign": {
+          "type": "string",
+          "enum": ["TOP", "MIDDLE", "BOTTOM"],
+          "default": "MIDDLE"
+        },
+        "fontSize": { "type": "number" },
+        "fontFamily": {
+          "type": "string",
+          "enum": ["Helvetica", "Helvetica-Bold", "Courier", "Times-Roman"]
+        },
+        "fontColorHex": { "type": "string" },
+        "autoShrinkToFit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically decrease font size down to minFontSize to prevent box overflow."
+        },
+        "minFontSize": {
+          "type": "number",
+          "default": 6
+        },
+        "rotation": {
+          "type": "integer",
+          "enum": [0, 90, 180, 270],
+          "default": 0
+        },
+        "isOverflowTarget": {
+          "type": "boolean",
+          "default": false,
+          "description": "Marks this shape as an overflow continuation target if prior boxes are filled."
+        }
+      }
+    },
+    "FieldFormatConfig": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "object",
+          "properties": {
+            "roundToWholeDollar": { "type": "boolean", "default": true },
+            "negativeStyle": {
+              "type": "string",
+              "enum": ["PARENTHESES", "MINUS", "NONE"],
+              "default": "PARENTHESES"
+            },
+            "showSymbol": { "type": "boolean", "default": false },
+            "suppressZero": { "type": "boolean", "default": false }
+          }
+        },
+        "ssn": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": ["DASHED", "MASKED", "RAW"],
+              "default": "DASHED"
+            },
+            "maskChar": { "type": "string", "default": "*" }
+          }
+        },
+        "ein": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": ["DASHED", "MASKED", "RAW"],
+              "default": "DASHED"
+            }
+          }
+        },
+        "date": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "enum": ["MM/DD/YYYY", "MMDDYYYY", "YYYY-MM-DD", "MM/YY", "M/D/YY"],
+              "default": "MM/DD/YYYY"
+            }
+          }
+        },
+        "datetime": {
+          "type": "object",
+          "properties": {
+            "pattern": { "type": "string", "default": "MM/DD/YYYY hh:mm A" },
+            "splitMode": {
+              "type": "string",
+              "enum": ["NONE", "DATE_ONLY", "TIME_ONLY", "DATE_AND_TIME_SEPARATE"],
+              "default": "NONE"
+            }
+          }
+        },
+        "booleanCheck": {
+          "type": "object",
+          "properties": {
+            "checkStyle": {
+              "type": "string",
+              "enum": ["X", "CHECKMARK", "FILLED_RECT", "SLASH"],
+              "default": "X"
+            },
+            "checkedValueMatch": {
+              "description": "Value that represents 'checked' (can be boolean true, string match, enum, etc.)."
+            }
+          }
+        },
+        "text": {
+          "type": "object",
+          "properties": {
+            "casing": {
+              "type": "string",
+              "enum": ["UPPERCASE", "LOWERCASE", "TITLECASE", "NONE"],
+              "default": "UPPERCASE"
+            },
+            "trim": { "type": "boolean", "default": true },
+            "padLength": { "type": "integer" },
+            "padChar": { "type": "string", "default": " " }
+          }
+        }
+      }
+    },
+    "SubfieldMapping": {
+      "type": "object",
+      "required": ["key", "dataPath", "type"],
+      "properties": {
+        "key": { "type": "string", "description": "Identifier referenced by GeometryTarget.subfieldKey" },
+        "dataPath": { "type": "string" },
+        "type": { "type": "string" },
+        "format": { "$ref": "#/$defs/FieldFormatConfig" },
+        "transform": {
+          "type": "string",
+          "enum": ["NONE", "DATE_PART", "TIME_PART", "FIRST_NAME", "LAST_NAME", "AREA_CODE", "PHONE_LOCAL"]
+        }
+      }
+    },
+    "RenderCondition": {
+      "type": "object",
+      "required": ["path", "operator"],
+      "properties": {
+        "path": { "type": "string" },
+        "operator": {
+          "type": "string",
+          "enum": ["EQUALS", "NOT_EQUALS", "GREATER_THAN", "LESS_THAN", "EXISTS", "IN", "IS_TRUE"]
+        },
+        "value": {}
+      }
+    }
+  }
+}

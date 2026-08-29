@@ -1,0 +1,249 @@
+{
+  "formId": "IRS-1040",
+  "formName": "U.S. Individual Income Tax Return",
+  "taxYear": 2025,
+  "revision": "Rev. December 2025",
+  "description": "Annual income tax return filed by citizens or residents of the United States.",
+  "jurisdiction": "US_FEDERAL",
+  "pageCount": 2,
+  "pageSize": {
+    "width": 612,
+    "height": 792,
+    "unit": "pt",
+    "coordinateOrigin": "TOP_LEFT"
+  },
+  "globalStyling": {
+    "fontFamily": "Helvetica",
+    "fontSize": 9,
+    "fontColorHex": "#000000"
+  },
+  "fields": [
+    {
+      "id": "f1040_filing_status_single",
+      "label": "Filing Status: Single",
+      "type": "BOOLEAN_CHECK",
+      "dataPath": "filing.status",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": {
+        "booleanCheck": { "checkStyle": "X", "checkedValueMatch": "SINGLE" }
+      },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 62, "y": 68, "width": 10, "height": 10 } }]
+    },
+    {
+      "id": "f1040_filing_status_mfj",
+      "label": "Filing Status: Married Filing Jointly",
+      "type": "BOOLEAN_CHECK",
+      "dataPath": "filing.status",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": {
+        "booleanCheck": { "checkStyle": "X", "checkedValueMatch": "MARRIED_FILING_JOINTLY" }
+      },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 130, "y": 68, "width": 10, "height": 10 } }]
+    },
+    {
+      "id": "f1040_primary_first_name",
+      "label": "Your first name and middle initial",
+      "type": "STRING",
+      "dataPath": "taxpayer.primary.firstName",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "text": { "casing": "UPPERCASE" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 95, "width": 210, "height": 14 } }]
+    },
+    {
+      "id": "f1040_primary_last_name",
+      "label": "Your last name",
+      "type": "STRING",
+      "dataPath": "taxpayer.primary.lastName",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "text": { "casing": "UPPERCASE" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 260, "y": 95, "width": 170, "height": 14 } }]
+    },
+    {
+      "id": "f1040_primary_ssn_segmented_comb",
+      "label": "Your social security number (3-2-4 Segmented Comb Boxes)",
+      "type": "SSN",
+      "dataPath": "taxpayer.primary.identity.ssn",
+      "layoutStrategy": "CHARACTER_SLICE",
+      "format": { "ssn": { "format": "RAW" } },
+      "bounds": [
+        {
+          "pageIndex": 0,
+          "characterRange": [0, 3],
+          "box": { "x": 440, "y": 95, "width": 36, "height": 14 },
+          "comb": { "enabled": true, "cellCount": 3, "cellSpacing": 1 }
+        },
+        {
+          "pageIndex": 0,
+          "characterRange": [3, 5],
+          "box": { "x": 484, "y": 95, "width": 24, "height": 14 },
+          "comb": { "enabled": true, "cellCount": 2, "cellSpacing": 1 }
+        },
+        {
+          "pageIndex": 0,
+          "characterRange": [5, 9],
+          "box": { "x": 516, "y": 95, "width": 48, "height": 14 },
+          "comb": { "enabled": true, "cellCount": 4, "cellSpacing": 1 }
+        }
+      ]
+    },
+    {
+      "id": "f1040_spouse_first_name",
+      "label": "Spouse's first name and middle initial",
+      "type": "STRING",
+      "dataPath": "taxpayer.spouse.firstName",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "text": { "casing": "UPPERCASE" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 120, "width": 210, "height": 14 } }]
+    },
+    {
+      "id": "f1040_spouse_last_name",
+      "label": "Spouse's last name",
+      "type": "STRING",
+      "dataPath": "taxpayer.spouse.lastName",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "text": { "casing": "UPPERCASE" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 260, "y": 120, "width": 170, "height": 14 } }]
+    },
+    {
+      "id": "f1040_spouse_ssn",
+      "label": "Spouse's social security number",
+      "type": "SSN",
+      "dataPath": "taxpayer.spouse.identity.ssn",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "ssn": { "format": "DASHED" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 440, "y": 120, "width": 125, "height": 14 } }]
+    },
+    {
+      "id": "f1040_address_multiline_wrap",
+      "label": "Home address (Multi-line Disjoint Segment Wrap)",
+      "type": "STRING",
+      "dataPath": "taxpayer.address.streetLine2",
+      "layoutStrategy": "MULTI_LINE_WRAP",
+      "format": { "text": { "casing": "UPPERCASE" } },
+      "bounds": [
+        { "pageIndex": 0, "box": { "x": 40, "y": 145, "width": 260, "height": 14 }, "maxCharacters": 22 },
+        { "pageIndex": 0, "box": { "x": 310, "y": 145, "width": 150, "height": 14 }, "maxCharacters": 20 }
+      ]
+    },
+    {
+      "id": "f1040_city",
+      "label": "City, town, or post office",
+      "type": "STRING",
+      "dataPath": "taxpayer.address.city",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 170, "width": 240, "height": 14 } }]
+    },
+    {
+      "id": "f1040_state",
+      "label": "State",
+      "type": "STRING",
+      "dataPath": "taxpayer.address.state",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 290, "y": 170, "width": 30, "height": 14 }, "align": "CENTER" }]
+    },
+    {
+      "id": "f1040_zip",
+      "label": "ZIP code",
+      "type": "STRING",
+      "dataPath": "taxpayer.address.zipCode",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 330, "y": 170, "width": 60, "height": 14 } }]
+    },
+    {
+      "id": "f1040_dep1_first_name",
+      "label": "Dependent 1 First Name",
+      "type": "STRING",
+      "dataPath": "taxpayer.dependents[0].firstName",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 230, "width": 120, "height": 14 } }]
+    },
+    {
+      "id": "f1040_dep1_ssn",
+      "label": "Dependent 1 SSN",
+      "type": "SSN",
+      "dataPath": "taxpayer.dependents[0].ssn",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "ssn": { "format": "DASHED" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 170, "y": 230, "width": 90, "height": 14 } }]
+    },
+    {
+      "id": "f1040_dep1_child_tax_credit",
+      "label": "Dependent 1 Child Tax Credit",
+      "type": "BOOLEAN_CHECK",
+      "dataPath": "taxpayer.dependents[0].qualifiesForChildTaxCredit",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "booleanCheck": { "checkStyle": "X" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 380, "y": 230, "width": 10, "height": 10 } }]
+    },
+    {
+      "id": "f1040_line1a_wages",
+      "label": "Line 1a: Total amount from Form(s) W-2, box 1",
+      "type": "CURRENCY",
+      "dataPath": "income.wagesW2",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": true, "showSymbol": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 450, "y": 320, "width": 115, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "f1040_line2b_taxable_interest",
+      "label": "Line 2b: Taxable interest",
+      "type": "CURRENCY",
+      "dataPath": "income.taxableInterest",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": true } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 450, "y": 345, "width": 115, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "f1040_line7_capital_gain_loss",
+      "label": "Line 7: Capital gain or (loss) - Negative in Parentheses",
+      "type": "CURRENCY",
+      "dataPath": "income.capitalGainOrLoss",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": true, "negativeStyle": "PARENTHESES" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 450, "y": 395, "width": 115, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "f1040_schedule_c_net_profit",
+      "label": "Schedule C Net Profit (JSONPath Filter Resolution)",
+      "type": "CURRENCY",
+      "dataPath": "income.schedules[?(@.type==\"C\")].netProfit",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": true } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 450, "y": 420, "width": 115, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "f1040_signing_split_datetime",
+      "label": "Signing Timestamp (Split into Date Box & Time Box)",
+      "type": "DATETIME",
+      "dataPath": "signing.timestamp",
+      "layoutStrategy": "SUBFIELD_MAPPING",
+      "subfields": [
+        { "key": "sign_date_part", "dataPath": "signing.timestamp", "type": "DATE", "transform": "DATE_PART" },
+        { "key": "sign_time_part", "dataPath": "signing.timestamp", "type": "STRING", "transform": "TIME_PART" }
+      ],
+      "bounds": [
+        {
+          "pageIndex": 1,
+          "subfieldKey": "sign_date_part",
+          "box": { "x": 430, "y": 680, "width": 70, "height": 14 },
+          "align": "CENTER"
+        },
+        {
+          "pageIndex": 1,
+          "subfieldKey": "sign_time_part",
+          "box": { "x": 510, "y": 680, "width": 55, "height": 14 },
+          "align": "CENTER"
+        }
+      ]
+    },
+    {
+      "id": "f1040_preparer_ein_dashed",
+      "label": "Paid Preparer Firm EIN",
+      "type": "EIN",
+      "dataPath": "signing.preparer.firmEin",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "ein": { "format": "DASHED" } },
+      "bounds": [{ "pageIndex": 1, "box": { "x": 430, "y": 730, "width": 120, "height": 14 } }]
+    }
+  ]
+}

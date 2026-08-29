@@ -1,0 +1,119 @@
+{
+  "formId": "IRS-W2",
+  "formName": "Wage and Tax Statement",
+  "taxYear": 2025,
+  "revision": "Rev. November 2025",
+  "description": "Reports wages paid to employees and the taxes withheld from them.",
+  "jurisdiction": "US_FEDERAL",
+  "pageCount": 1,
+  "pageSize": {
+    "width": 612,
+    "height": 396,
+    "unit": "pt",
+    "coordinateOrigin": "TOP_LEFT"
+  },
+  "globalStyling": {
+    "fontFamily": "Courier",
+    "fontSize": 9,
+    "fontColorHex": "#000000"
+  },
+  "fields": [
+    {
+      "id": "w2_box_a_employee_ssn_comb",
+      "label": "Box a: Employee's social security number",
+      "type": "SSN",
+      "dataPath": "employee.ssn",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "ssn": { "format": "DASHED" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 45, "width": 180, "height": 14 } }]
+    },
+    {
+      "id": "w2_box_b_employer_ein",
+      "label": "Box b: Employer identification number (EIN)",
+      "type": "EIN",
+      "dataPath": "employer.ein",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "ein": { "format": "DASHED" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 80, "width": 180, "height": 14 } }]
+    },
+    {
+      "id": "w2_box_c_employer_name",
+      "label": "Box c: Employer's name and address line",
+      "type": "STRING",
+      "dataPath": "employer.name",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 115, "width": 240, "height": 14 } }]
+    },
+    {
+      "id": "w2_box_1_wages",
+      "label": "Box 1: Wages, tips, other compensation",
+      "type": "CURRENCY",
+      "dataPath": "financials.box1_wagesTipsOtherComp",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false, "showSymbol": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 300, "y": 45, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "w2_box_2_fed_tax",
+      "label": "Box 2: Federal income tax withheld",
+      "type": "CURRENCY",
+      "dataPath": "financials.box2_federalIncomeTaxWithheld",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false, "showSymbol": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 440, "y": 45, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "w2_box_3_ss_wages",
+      "label": "Box 3: Social security wages",
+      "type": "CURRENCY",
+      "dataPath": "financials.box3_socialSecurityWages",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 300, "y": 80, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "w2_box_4_ss_tax",
+      "label": "Box 4: Social security tax withheld",
+      "type": "CURRENCY",
+      "dataPath": "financials.box4_socialSecurityTaxWithheld",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 440, "y": 80, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "w2_box_13_retirement_plan",
+      "label": "Box 13: Retirement plan checkbox",
+      "type": "BOOLEAN_CHECK",
+      "dataPath": "financials.box13_flags.retirementPlan",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "booleanCheck": { "checkStyle": "X" } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 350, "y": 200, "width": 12, "height": 12 } }]
+    },
+    {
+      "id": "w2_box_15_state",
+      "label": "Box 15: State (Array Index Resolution)",
+      "type": "STRING",
+      "dataPath": "financials.stateTaxes[0].state",
+      "layoutStrategy": "SINGLE_BOX",
+      "bounds": [{ "pageIndex": 0, "box": { "x": 40, "y": 280, "width": 30, "height": 14 }, "align": "CENTER" }]
+    },
+    {
+      "id": "w2_box_16_state_wages",
+      "label": "Box 16: State wages, tips, etc.",
+      "type": "CURRENCY",
+      "dataPath": "financials.stateTaxes[0].stateWages",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 300, "y": 280, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    },
+    {
+      "id": "w2_box_17_state_tax",
+      "label": "Box 17: State income tax",
+      "type": "CURRENCY",
+      "dataPath": "financials.stateTaxes[0].stateIncomeTax",
+      "layoutStrategy": "SINGLE_BOX",
+      "format": { "currency": { "roundToWholeDollar": false } },
+      "bounds": [{ "pageIndex": 0, "box": { "x": 440, "y": 280, "width": 120, "height": 14 }, "align": "RIGHT" }]
+    }
+  ]
+}
