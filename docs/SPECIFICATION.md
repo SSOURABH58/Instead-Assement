@@ -1,164 +1,133 @@
 # U.S. Tax Form Annotation Specification
 
 **Version:** 1.0.0  
-**Schema Standard:** Universal JSON Schema (Draft 2020-12) & Strict TypeScript Interfaces  
+**Schema Standard:** [JSON Schema (Draft 2020-12)](https://json-schema.org/draft/2020-12/json-schema-core.html) & Strict TypeScript Interfaces  
 **Target Engine:** Pure TypeScript Zero-Binary PDF Overlay Engine (`pdf-lib`)
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary & Core Assumptions
 
-This specification defines a declarative data contract for annotating physical boxes, lines, tables, and grids on U.S. tax forms (such as IRS Form 1040, Form W-2, and Schedules).
+This specification defines a declarative data contract for annotating physical boxes, lines, tables, and grids on U.S. tax forms (such as [IRS](https://www.irs.gov/) Form 1040, Form W-2, and Schedules).
 
 It solves four primary engineering challenges:
 1. **Multi-Segment Geometry**: Connects a single logical data field to multiple non-contiguous boxes, split date/time fields, character comb grids, or wrapped text lines.
-2. **Nested Data Resolution**: Pulls values directly from deeply nested JSON payloads using dot notation, array indices, and filter predicates (`income.schedules[?(@.type=="C")].netProfit`).
-3. **IRS Formatting Rules**: Formats currency with whole-dollar rounding and negative parentheses `(1,234)`, dashes SSNs/EINs, formats dates, and auto-shrinks font sizes to prevent text clipping.
-4. **Platform Independence**: Defined via JSON Schema Draft 2020-12 for complete language portability across TypeScript, Python, Go, and Java.
+2. **Nested Data Resolution**: Pulls values directly from deeply nested object payloads using dot notation, array indices, and filter predicates like `income.schedules[?(@.type=="C")].netProfit` (see [RFC 9535 JSONPath Filter Selectors](https://www.rfc-editor.org/rfc/rfc9535.html#name-filter-selectors) and [JSONPath Documentation](https://goessner.net/articles/JsonPath/)).
+3. **IRS Formatting Rules**: Formats currency with whole-dollar rounding and negative parentheses `(1,234)`, dashes/masks [Social Security Numbers (SSNs)](https://www.irs.gov/individuals/understanding-your-ssn) and [Employer Identification Numbers (EINs)](https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-number-ein), formats dates, and auto-shrinks font sizes to prevent text clipping.
+4. **Platform Independence**: Defined via [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) for complete language portability across TypeScript, Python, Go, and Java.
+
+### Key Assumptions & Storage Agnosticism
+* **Nested Data Assumption**: Taxpayer input data is assumed to be structured as a nested object payload (typically serialized in JSON).
+* **Database Agnosticism**: The specification is entirely database-agnostic. The `dataPath` resolution layer operates on an abstract property-path contract (`taxpayer.primary.identity.ssn`). Whether the underlying data source is a relational database (SQL via PostgreSQL `JSONB`, MySQL, SQLite, or ORM entity projections), a NoSQL document database (MongoDB, DynamoDB), or a Key-Value store, the data provider simply serializes or projects records into the target object graph before resolution.
 
 ---
 
-## 2. Architecture & Data Flow
+## 2. Core Data Structure Model
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                       INPUTS                                            │
-│  ┌───────────────────────────┐  ┌─────────────────────────────────┐  ┌────────────────┐  │
-│  │   Taxpayer JSON Payload   │  │ Tax Form Annotation Spec JSON   │  │   Blank PDF    │  │
-│  │          (DATA)           │  │             (SPEC)              │  │ Form Template  │  │
-│  └─────────────┬─────────────┘  └────────────────┬────────────────┘  └───────┬────────┘  │
-└────────────────┼─────────────────────────────────┼───────────────────────────┼──────────┘
-                 │                                 │                           │
-                 ▼                                 ▼                           │
-┌────────────────┼─────────────────────────────────┼───────────────────────────┼──────────┐
-│ CORE ENGINE    │                                 │                           │          │
-│                ▼                                 ▼                           │          │
-│       ┌─────────────────┐               ┌───────────────────┐                │          │
-│       │ Path Resolver   │               │ Zod Runtime       │                │          │
-│       │ (PR)            │               │ Validator (V)     │                │          │
-│       └────────┬────────┘               └─────────┬─────────┘                │          │
-│                │                                  │                          │          │
-│                ▼ (Extract Raw Value)              ▼ (Validated Spec)         │          │
-│       ┌─────────────────┐               ┌───────────────────┐                │          │
-│       │ Tax Formatter   │               │ Tax Form Engine   │                │          │
-│       │ (TF)            │               │ (E)               │                │          │
-│       └────────┬────────┘               └─────────┬─────────┘                │          │
-│                │                                  │                          │          │
-│                └────────────────┬─────────────────┘                          │          │
-│                                 │                                            │          │
-│                                 ▼                                            │          │
-│                       ┌───────────────────┐                                  │          │
-│                       │ Geometry Engine   │                                  │          │
-│                       │ (GE)              │                                  │          │
-│                       └─────────┬─────────┘                                  │          │
-│                                 │                                            │          │
-│        ┌────────────────────────┼────────────────────────┐                   │          │
-│        │            │           │            │           │                   │          │
-│        ▼            ▼           ▼            ▼           ▼                   │          │
-│   ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌──────────┐ ┌───────────┐        │          │
-│   │SINGLE_BOX│ │MULTI_LINE│ │CHARACTER  │ │SUBFIELD  │ │OVERFLOW   │        │          │
-│   │          │ │_WRAP     │ │_SLICE     │ │_MAPPING  │ │_CHAIN     │        │          │
-│   └────┬─────┘ └────┬─────┘ └─────┬─────┘ └────┬─────┘ └─────┬─────┘        │          │
-│        │            │           │            │           │                  │          │
-└────────┼────────────┼───────────┼────────────┼───────────┼──────────────────┼──────────┘
-         │            │           │            │           │                  │
-         └────────────┴─────┬─────┴────────────┴───────────┘                  │
-                            │                                                 │
-                            ▼                                                 ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ OUTPUT                    │                                                 │           │
-│                           ▼                                                 ▼           │
-│              ┌─────────────────────────────────┐                   ┌────────────────┐   │
-│              │   PDF-Lib Overlay Renderer      │◄──────────────────│ Blank PDF Form │   │
-│              │            (RENDER)             │                   │     (PDF)      │   │
-│              └────────────────┬────────────────┘                   └────────────────┘   │
-│                               │                                                         │
-│                               ▼                                                         │
-│              ┌─────────────────────────────────┐                                        │
-│              │   Pixel-Perfect Filled PDF      │                                        │
-│              │            (OUT)                │                                        │
-│              └─────────────────────────────────┘                                        │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+The class-based structure of the annotation specification is defined using standard UML class modeling (rendered responsively via Mermaid):
+
+```mermaid
+classDiagram
+    class TaxFormAnnotation {
+        +string formId
+        +string formName
+        +int taxYear
+        +string revision
+        +FormJurisdiction jurisdiction
+        +int pageCount
+        +PageSize pageSize
+        +GlobalStyling globalStyling
+        +TaxFormField[] fields
+    }
+
+    class PageSize {
+        +float width
+        +float height
+        +MeasurementUnit unit
+        +CoordinateOrigin coordinateOrigin
+    }
+
+    class TextStyle {
+        +StandardFontFamily fontFamily
+        +float fontSize
+        +string fontColorHex
+        +FontStyle fontStyle
+    }
+
+    class GlobalStyling {
+        +TextStyle style
+    }
+
+    class TaxFormField {
+        +string id
+        +string label
+        +FieldType type
+        +string dataPath
+        +any fallbackValue
+        +LayoutStrategy layoutStrategy
+        +FieldFormatConfig format
+        +GeometryTarget[] bounds
+        +SubfieldMapping[] subfields
+    }
+
+    class GeometryTarget {
+        +int pageIndex
+        +BoundingBox box
+        +CombConfig comb
+        +TextStyle style
+        +int maxCharacters
+        +int[] characterRange
+        +string subfieldKey
+        +TextAlignment align
+        +VerticalAlignment verticalAlign
+        +bool autoShrinkToFit
+        +float minFontSize
+        +bool isOverflowTarget
+    }
+
+    class BoundingBox {
+        +float x
+        +float y
+        +float width
+        +float height
+    }
+
+    class CombConfig {
+        +bool enabled
+        +int cellCount
+        +float cellSpacing
+    }
+
+    TaxFormAnnotation "1" *-- "1" PageSize
+    TaxFormAnnotation "1" *-- "1" GlobalStyling
+    GlobalStyling "1" *-- "1" TextStyle
+    TaxFormAnnotation "1" *-- "1..*" TaxFormField
+    TaxFormField "1" *-- "1..*" GeometryTarget
+    GeometryTarget "0..1" *-- "1" TextStyle
+    GeometryTarget "1" *-- "1" BoundingBox
+    GeometryTarget "1" *-- "0..1" CombConfig
 ```
 
 ---
 
-## 3. Core Data Structure Model
-
-```text
-┌──────────────────────────────────────────┐          ┌──────────────────────────────────┐
-│           TaxFormAnnotation              │          │             PageSize             │
-├──────────────────────────────────────────┤          ├──────────────────────────────────┤
-│ +string formId                           │ 1      1 │ +float width                     │
-│ +string formName                         ├──────────┤ +float height                    │
-│ +int taxYear                             │          │ +MeasurementUnit unit            │
-│ +string revision                         │          │ +CoordinateOrigin coordinateOrigin│
-│ +FormJurisdiction jurisdiction           │          └──────────────────────────────────┘
-│ +int pageCount                           │
-│ +PageSize pageSize                       │
-│ +GlobalStyling globalStyling             │
-│ +TaxFormField[] fields                   │ 1
-└────────────────────┬─────────────────────┘
-                     │
-                     │ 1..*
-                     ▼
-┌──────────────────────────────────────────┐
-│              TaxFormField                │
-├──────────────────────────────────────────┤
-│ +string id                               │
-│ +string label                            │
-│ +FieldType type                          │
-│ +string dataPath                         │
-│ +any fallbackValue                       │
-│ +LayoutStrategy layoutStrategy           │
-│ +FieldFormatConfig format                │
-│ +GeometryTarget[] bounds                 │
-│ +SubfieldMapping[] subfields             │
-└────────────────────┬─────────────────────┘
-                     │
-                     │ 1..*
-                     ▼
-┌──────────────────────────────────────────┐
-│             GeometryTarget               │
-├──────────────────────────────────────────┤
-│ +int pageIndex                           │
-│ +BoundingBox box                         │
-│ +CombConfig comb                         │
-│ +int maxCharacters                       │
-│ +int[] characterRange                    │
-│ +string subfieldKey                      │
-│ +TextAlignment align                     │
-│ +float fontSize                          │
-│ +bool autoShrinkToFit                    │
-└──────────────────────────────────────────┘
-```
-
----
-
-## 4. Layout Strategies & Geometry Rules
+## 3. Layout Strategies & Geometry Rules
 
 IRS tax forms rarely place inputs inside simple single boxes. Fields split across physical boxes, comb grids, or wrapped lines. The specification handles this using five layout strategies within `bounds: GeometryTarget[]`.
 
 ### Strategy 1: `CHARACTER_SLICE` (Segmented Comb Boxes)
 * **Analogy**: Like filling out a crossword grid where each square holds exactly one character.
-* **Use Case**: SSNs and EINs split into `3-2-4` boxes separated by printed dashes: `[___] - [__] - [____]`.
+* **Use Case**: [Social Security Numbers (SSNs)](https://www.ssa.gov/ssnumber/) and [Employer Identification Numbers (EINs)](https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-number-ein) split into `3-2-4` boxes separated by printed dashes: `[___] - [__] - [____]`.
 * **Behavior**: The engine partitions the raw string using character ranges (`[0, 3]`, `[3, 5]`, `[5, 9]`) and centers each character inside its individual comb cell.
 
 $$\text{cellX} = x_{\text{box}} + i \cdot (\text{width}_{\text{cell}} + \text{spacing}) + \frac{\text{width}_{\text{cell}} - \text{width}_{\text{char}}}{2}$$
 
-```text
-                     ┌───────────────────────────────────────┐
-                     │        SSN Raw: "123456789"           │
-                     └───────────────────┬───────────────────┘
-                                         │
-            ┌────────────────────────────┼────────────────────────────┐
-            │                            │                            │
-            ▼                            ▼                            ▼
-┌───────────────────────┐    ┌───────────────────────┐    ┌───────────────────────┐
-│ Target 1 (Range 0-3)  │    │ Target 2 (Range 3-5)  │    │ Target 3 (Range 5-9)  │
-│ Comb: 3 cells         │    │ Comb: 2 cells         │    │ Comb: 4 cells         │
-│ [ 1 ][ 2 ][ 3 ]       │    │ [ 4 ][ 5 ]            │    │ [ 6 ][ 7 ][ 8 ][ 9 ]  │
-└───────────────────────┘    └───────────────────────┘    └───────────────────────┘
+```mermaid
+flowchart TD
+    Raw["SSN Raw String: '123456789'"]
+    
+    Raw --> T1["Target 1 (Range 0-3)\nComb: 3 cells\n[ 1 ][ 2 ][ 3 ]"]
+    Raw --> T2["Target 2 (Range 3-5)\nComb: 2 cells\n[ 4 ][ 5 ]"]
+    Raw --> T3["Target 3 (Range 5-9)\nComb: 4 cells\n[ 6 ][ 7 ][ 8 ][ 9 ]"]
 ```
 
 ### Strategy 2: `MULTI_LINE_WRAP` (Disjoint Text Wrap)
@@ -180,46 +149,53 @@ $$\text{cellX} = x_{\text{box}} + i \cdot (\text{width}_{\text{cell}} + \text{sp
 * **Analogy**: A standard name tag sticker.
 * **Use Case**: Single-line text, currency amounts, or checkboxes with alignment (`LEFT`, `CENTER`, `RIGHT`) and auto-shrink typography.
 
+### Typography, Font Styling & Auto-Shrink Rules
+To handle real-world text sizing and presentation variance, typography settings are configured at both the global level (`GlobalStyling`) and per-box target level (`GeometryTarget`):
+
+1. **Multiline Text Support**:
+   * Supported via `LayoutStrategy.MULTI_LINE_WRAP` (flowing text across multiple physical line boxes) and internal line breaking with vertical alignment (`verticalAlign: TOP | MIDDLE | BOTTOM`).
+2. **Dynamic Font Shrink-to-Fit**:
+   * Configured via `autoShrinkToFit: true` and `minFontSize: 6` (default minimum font size in points).
+   * If input text exceeds the physical box width or line bounds, the rendering engine automatically scales down font size incrementally until the text fits cleanly inside the box boundaries without clipping.
+3. **Font Styling & Variant Options**:
+   * **Font Families & Weights**: Configured via `fontFamily: StandardFontFamily` (`Helvetica`, `Helvetica-Bold`, `Courier`, `Times-Roman`). Bold and Italic formatting in standard PDF engine specifications are represented via explicit font face variants (`Helvetica-Bold`, `Times-Bold`, `Times-Italic`).
+   * **Font Colors**: Configured via `fontColorHex` (e.g., `#000000` for default black ink or custom colors).
+
 ---
 
-## 5. Data Path Resolution Rules
+## 4. Data Path Resolution Rules
 
-Taxpayer data uses structured nested JSON. The path resolver extracts values using three lookup rules:
+Taxpayer data is provided as a structured object graph (SQL projection or NoSQL document). The path resolver extracts values using four lookup rules:
 
-| Rule | Syntax Example | Behavior |
+| Rule | Syntax Example | Documentation Link & Behavior |
 | :--- | :--- | :--- |
 | **Dot Navigation** | `taxpayer.primary.identity.ssn` | Navigates nested object properties. |
 | **Array Indexing** | `taxpayer.dependents[0].firstName` | Accesses specific array elements by 0-based index. |
-| **Filter Query** | `income.schedules[?(@.type=="C")].netProfit` | Matches array items by property value filter. |
-| **Fallback Handling** | `fallbackValue: "0.00"` | Returns default value when path is null or undefined. |
+| **Filter Query** | `income.schedules[?(@.type=="C")].netProfit` | Matches array items using [RFC 9535 Filter Selectors](https://www.rfc-editor.org/rfc/rfc9535.html#name-filter-selectors). |
+| **Fallback Handling** | `fallbackValue: "0.00"` | Returns default value when path resolves to null or undefined. |
 
 ---
 
-## 6. IRS Tax Formatting Pipeline
+## 5. IRS Tax Formatting Pipeline
 
-```text
-                      ┌─────────────────────────────┐
-                      │      Raw Input Data         │
-                      └──────────────┬──────────────┘
-                                     │
-                                     ▼
-                      ┌─────────────────────────────┐
-                      │         Field Type          │
-                      └──────────────┬──────────────┘
-                                     │
-       ┌─────────────────┬───────────┴───────────┬─────────────────┬─────────────────┐
-       │                 │                       │                 │                 │
-       ▼                 ▼                       ▼                 ▼                 ▼
-┌──────────────┐  ┌──────────────┐        ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│   CURRENCY   │  │     SSN      │        │     EIN      │  │     DATE     │  │BOOLEAN_CHECK │
-│ Whole dollar │  │ Dashed /     │        │ Dashed       │  │ MM/DD/YYYY   │  │ 'X', '✓',    │
-│ (1,234)      │  │ Masked       │        │ (12-3456789) │  │ custom fmt   │  │ solid box    │
-└──────────────┘  └──────────────┘        └──────────────┘  └──────────────┘  └──────────────┘
+Formatting rules conform to standard [IRS Guidelines](https://www.irs.gov/forms-instructions) across currency, identity numbers, dates, and boolean selections:
+
+```mermaid
+flowchart TD
+    In["Raw Input Value"] --> CheckType{"Field Type"}
+    
+    CheckType -->|CURRENCY| Cur["Currency Formatter\nWhole dollar rounding\n(1,234) for negative"]
+    CheckType -->|SSN| SSN["SSN Formatter\nDashed 123-45-6789\nor Masked ***-**-6789"]
+    CheckType -->|EIN| EIN["EIN Formatter\nDashed 12-3456789"]
+    CheckType -->|DATE| Date["Date Formatter\nMM/DD/YYYY or Custom"]
+    CheckType -->|BOOLEAN| Bool["Checkbox Formatter\n'X', '✓', or Solid Box"]
 ```
 
 ---
 
-## 7. Complete Specification Schema Example
+## 6. Complete Specification Schema Example
+
+Below is a complete instance compliant with [JSON Schema (Draft 2020-12)](https://json-schema.org/draft/2020-12/schema):
 
 ```json
 {
@@ -267,3 +243,4 @@ Taxpayer data uses structured nested JSON. The path resolver extracts values usi
   ]
 }
 ```
+

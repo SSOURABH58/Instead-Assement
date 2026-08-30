@@ -1,6 +1,6 @@
-# Architecture & Design Decisions
+# Prototype Implementation Design Decisions
 
-This document details the core architectural decisions, engineering trade-offs, and rationale behind the **Tax Form Annotation Specification & Engine**.
+This document details the core architectural decisions, engineering trade-offs, framework choices, and rationale behind the **prototype implementation** built in this repository. It takes inspiration from the generic specification ([SPECIFICATION.md](SPECIFICATION.md)) and tightens concrete technology choices (TypeScript, `pdf-lib`, `zod`) for this reference prototype engine.
 
 ---
 

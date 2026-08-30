@@ -112,6 +112,20 @@ export enum StandardFontFamily {
   TIMES_ROMAN = 'Times-Roman',
 }
 
+export enum FontStyle {
+  REGULAR = 'REGULAR',
+  BOLD = 'BOLD',
+  ITALIC = 'ITALIC',
+  BOLD_ITALIC = 'BOLD_ITALIC',
+}
+
+export const TextStyleSchema = z.object({
+  fontFamily: z.nativeEnum(StandardFontFamily).default(StandardFontFamily.HELVETICA),
+  fontSize: z.number().positive().default(9),
+  fontColorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#000000'),
+  fontStyle: z.nativeEnum(FontStyle).default(FontStyle.REGULAR),
+});
+
 // Zod Schemas for Runtime Validation
 export const BoundingBoxSchema = z.object({
   x: z.number(),
@@ -137,9 +151,11 @@ export const GeometryTargetSchema = z.object({
   subfieldKey: z.string().optional(),
   align: z.nativeEnum(TextAlignment).default(TextAlignment.LEFT),
   verticalAlign: z.nativeEnum(VerticalAlignment).default(VerticalAlignment.MIDDLE),
+  style: TextStyleSchema.partial().optional(),
   fontSize: z.number().positive().optional(),
   fontFamily: z.nativeEnum(StandardFontFamily).optional(),
   fontColorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  fontStyle: z.nativeEnum(FontStyle).optional(),
   autoShrinkToFit: z.boolean().default(true),
   minFontSize: z.number().positive().default(6),
   rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]).default(0),
@@ -240,6 +256,8 @@ export const GlobalStylingSchema = z.object({
   fontFamily: z.nativeEnum(StandardFontFamily).default(StandardFontFamily.HELVETICA),
   fontSize: z.number().positive().default(9),
   fontColorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#000000'),
+  fontStyle: z.nativeEnum(FontStyle).default(FontStyle.REGULAR).optional(),
+  style: TextStyleSchema.optional(),
 });
 
 export const TaxFormAnnotationSchema = z.object({
@@ -257,6 +275,7 @@ export const TaxFormAnnotationSchema = z.object({
 });
 
 // TypeScript Types Derived from Zod
+export type TextStyle = z.infer<typeof TextStyleSchema>;
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
 export type CombConfig = z.infer<typeof CombConfigSchema>;
 export type GeometryTarget = z.infer<typeof GeometryTargetSchema>;

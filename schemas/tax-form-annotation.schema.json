@@ -62,16 +62,8 @@
       }
     },
     "globalStyling": {
-      "type": "object",
-      "properties": {
-        "fontFamily": {
-          "type": "string",
-          "enum": ["Helvetica", "Helvetica-Bold", "Courier", "Times-Roman"],
-          "default": "Helvetica"
-        },
-        "fontSize": { "type": "number", "default": 9 },
-        "fontColorHex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "default": "#000000" }
-      }
+      "$ref": "#/$defs/TextStyle",
+      "description": "Global default typography and styling for all form fields."
     },
     "fields": {
       "type": "array",
@@ -212,6 +204,10 @@
           "enum": ["TOP", "MIDDLE", "BOTTOM"],
           "default": "MIDDLE"
         },
+        "style": {
+          "$ref": "#/$defs/TextStyle",
+          "description": "Per-box typography override style."
+        },
         "fontSize": { "type": "number" },
         "fontFamily": {
           "type": "string",
@@ -336,6 +332,23 @@
         "transform": {
           "type": "string",
           "enum": ["NONE", "DATE_PART", "TIME_PART", "FIRST_NAME", "LAST_NAME", "AREA_CODE", "PHONE_LOCAL"]
+        }
+      }
+    },
+    "TextStyle": {
+      "type": "object",
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "enum": ["Helvetica", "Helvetica-Bold", "Courier", "Times-Roman"],
+          "default": "Helvetica"
+        },
+        "fontSize": { "type": "number", "default": 9 },
+        "fontColorHex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "default": "#000000" },
+        "fontStyle": {
+          "type": "string",
+          "enum": ["REGULAR", "BOLD", "ITALIC", "BOLD_ITALIC"],
+          "default": "REGULAR"
         }
       }
     },

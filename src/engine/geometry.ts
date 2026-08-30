@@ -256,9 +256,15 @@ export class GeometryEngine {
         ? pageSize.height - rawY - pdfHeight
         : rawY;
 
-    let fontSize = target.fontSize ?? defaultStyling.fontSize;
-    const fontFamily = target.fontFamily ?? defaultStyling.fontFamily;
-    const fontColorHex = target.fontColorHex ?? defaultStyling.fontColorHex;
+    const targetStyle = target.style || {};
+    let fontSize = target.fontSize ?? targetStyle.fontSize ?? defaultStyling.fontSize;
+    let fontFamily = target.fontFamily ?? targetStyle.fontFamily ?? defaultStyling.fontFamily;
+    const fontColorHex = target.fontColorHex ?? targetStyle.fontColorHex ?? defaultStyling.fontColorHex;
+    const fontStyle = target.fontStyle ?? targetStyle.fontStyle;
+
+    if (fontStyle === 'BOLD' && fontFamily === StandardFontFamily.HELVETICA) {
+      fontFamily = StandardFontFamily.HELVETICA_BOLD;
+    }
 
     // Handle Comb Boxes (e.g. individual character boxes for SSN/EIN)
     if (target.comb && target.comb.enabled) {
